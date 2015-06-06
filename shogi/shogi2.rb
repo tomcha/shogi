@@ -3,7 +3,7 @@
 
 require 'socket'
 
-client_name = ARGV
+client_name = ARGV[0]
 client_name.chomp!
 
 client_status = 'BEFORE LOGIN'

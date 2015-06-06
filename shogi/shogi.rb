@@ -6,10 +6,12 @@ class Shogi_Client
   attr_reader :client_name
   attr_reader :game_summary
   attr_accessor :client_status
+  attr_accessor :mode
 
-  def initialize(client_name)
+  def initialize(option)
     @game_summary = Hash.new
-    @client_name = client_name
+    @client_name = option[0]
+    @mode = option[1]
   end
 
   def set_summary(recievelog)
@@ -24,11 +26,17 @@ class Shogi_Client
   end
 end
 
-obj = Shogi_Client.new(ARGV[0])
+obj = Shogi_Client.new(ARGV)
 obj.client_status = 'BEFORE LOGIN'
 
 sock = TCPSocket.open("localhost",4081)
-sock.write("LOGIN #{obj.client_name} testgame-1500-0\n")
+if (obj.mode == "x1")
+  sock.write("LOGIN #{obj.client_name} password x1\n")
+  puts 'x1'
+else
+  sock.write("LOGIN #{obj.client_name}  testgame-1500-0\n")
+  puts 'csa'
+end
 
 while(c = sock.gets.chomp!)
   puts c
@@ -44,7 +52,9 @@ while(c = sock.gets.chomp!)
     if(obj.game_summary["Your_Turn"] == '+')
       puts "my turn"
       #先手初手を指す
-      sock.write("+2726FU\n")
+      sock.write(obj.game_summary["Your_Turn"] + "2726FU\n")
+    else
+      obj.game_summary["Your_Turn"] = '-'
     end
     p obj.game_summary
   end
@@ -54,9 +64,12 @@ while(c = sock.gets.chomp!)
     puts "AGREE"
   end
 
-  if(obj.client_status == 'TAIKYOKU' && c == 'Your_Turn:+')
-    obj.client_status = 'YOUR_TURN'
-    puts obj.client_status
+  if(obj.client_status == 'TAIKYOKU' && c =~ /^(\+|\-)(.+),(T\d+)$/)
+    if($1 != obj.game_summary["Your_Turn"])
+      obj.client_status = 'YOUR_TURN'
+      sock.write(obj.game_summary["Your_Turn"] + "8384FU\n")
+      puts obj.client_status
+    end
   end
 end
 sock.close

@@ -59,11 +59,20 @@ while(c = sock.gets.chomp!)
     puts 'AGREE'
   end
 
+  if(c == '#LOSE' || c == '#WIN')
+    sock.write("LOGOUT\n")
+    break
+  end
+
   if(client.status == 'TAIKYOKU' && c =~ /^(\+|\-)(.+),(T\d+)$/)
     if($1 != client.game_summary['Your_Turn'])
       puts "[log:#{client.name}:my turn]"
       next_move = client.next_move("#{$1}#{$2}")
-      sendmessage = client.game_summary['Your_Turn'] + "#{next_move}" 
+      if( next_move =~ /^%/)
+        sendmessage = next_move
+      else
+        sendmessage = client.game_summary['Your_Turn'] + "#{next_move}" 
+      end
       sock.write(sendmessage + "\n")
       puts "[log:#{client.name}:#{sendmessage}:turn end]"
     end

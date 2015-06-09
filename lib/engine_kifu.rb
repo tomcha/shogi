@@ -17,9 +17,9 @@ class Engine_kifuread < Engine
 
   #ファイルオープン
   def read_kifufile
-    File.open("#{@filename}") do |file|
+    File.open("#{@filename}", "rt:shift_jis:utf-8") do |file|
       file.each_line do |kifu_str|
-        if(kifu_str =~ /^('|V|N|\$|P|T|%)/)
+        if(kifu_str =~ /^('|V|N|\$|P|T)/)
         elsif(kifu_str !~(/^\+$/))
           @kifudata.push(kifu_str.chomp)
         end
@@ -45,10 +45,22 @@ class Engine_kifuread < Engine
     elsif((last_sasite =~ /^\+/) && (@game_pointer % 2 == 0))
       @game_pointer += 1
     end
-    @kifudata[@game_pointer] =~(/^(\+|\-)(.+)/)
-    sasite = $2
-    @game_pointer += 2
+
+    if(@kifudata[@game_pointer] =~ /^(%.*)$/)
+      case $1
+      when '%TIME_UP'
+        sasite = '%TORYO'
+      when '%TORYO'
+        sasite = '%TORYO'
+      when '%TSUMI'
+        sasite = '%TORYO'
+      end
+    else
+      @kifudata[@game_pointer] =~(/^(\+|\-)(.+)/)
+      sasite = $2
+      @game_pointer += 2
+    end
+
     return sasite
   end
 end
-

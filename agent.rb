@@ -31,7 +31,7 @@ end
 # TAIKYOKU
  
 while(c = sock.gets.chomp!)
-  puts "[log:#{client.name}:catch message:#{c}]"
+  puts "[log:#{client.name}:recive message:#{c}]"
   client.set_summary(c);
   if(c == "LOGIN:#{client.name} OK")
     client.status = 'LOGIN'

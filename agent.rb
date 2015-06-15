@@ -3,7 +3,7 @@
 require 'socket'
 require 'yaml'
 
-require_relative './lib/shogi_client'
+require_relative './app/lib/shogi_client'
 #
 #クライアントクラスの読み込み
 config_file_name = ARGV[0]

@@ -1,6 +1,6 @@
 describe 'Engine_kifuread' do
-  require_relative '../lib/engine_kifu'
-  require_relative '../lib/engine'
+  require_relative '../app/lib/engine_kifu'
+  require_relative '../app/lib/engine'
 
   it 'Engineクラスの継承であること' do
     expect(Engine_kifuread.superclass.class).to eq Engine.class

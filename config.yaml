@@ -2,4 +2,5 @@ client_name: test1
 client_mode: x1
 thinkengine: kifu
 server_name: localhost
-port_no: 4081
+port: 4081
+

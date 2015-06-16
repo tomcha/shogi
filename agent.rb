@@ -2,10 +2,11 @@
 # coding:utf-8
 require 'socket'
 require 'yaml'
+require 'net/http'
 
 require_relative './app/lib/shogi_client'
 #
-#クライアントクラスの読み込み
+#クライアント設定ファイルの読み込み
 config_file_name = ARGV[0]
 config = YAML.load_file(config_file_name)
 
@@ -13,7 +14,7 @@ config = YAML.load_file(config_file_name)
 client = Shogi_client.new(config['client_name'], config['client_mode'], config['thinkengine'])
 
 #クライアントオブジェクトに対して、サーバー処理
-sock = TCPSocket.open(config['server_name'], config['port_no'])
+sock = TCPSocket.open(config['server_name'], config['port'])
 
 client.status = 'BEFORE_LOGIN'
 
@@ -29,6 +30,11 @@ end
 # BEFORE_LOGIN
 # LOGIN
 # TAIKYOKU
+
+#agent 設定ファイル
+
+agent_config = YAML.load_file('./agent_config.yaml')
+
  
 while(c = sock.gets.chomp!)
   puts "[log:#{client.name}:recive message:#{c}]"
@@ -63,11 +69,19 @@ while(c = sock.gets.chomp!)
     sock.write("LOGOUT\n")
     break
   end
+  if(client.status == 'TAIKYOKU' && c =~ /^(\+|\-)(\d\d)(\d\d)(.+),(T\d+)$/)
+    
+    # $1-$4からURI生成し、shogi_vewer へHTTPリクエスト
+    uri = URI.parse "http://#{agent_config['viewer_server_name']}:#{agent_config['viewer_server_port']}/"
+    req = Net::HTTP::Post.new uri.path
+    params = {teban: $1, before: $2, after: $3, koma: $4}
+    req.set_form_data(params)
+    res = Net::HTTP.start(uri.host, uri.port){|http| http.request req}
+    p res
 
-  if(client.status == 'TAIKYOKU' && c =~ /^(\+|\-)(.+),(T\d+)$/)
     if($1 != client.game_summary['Your_Turn'])
       puts "[log:#{client.name}:my turn]"
-      next_move = client.next_move("#{$1}#{$2}")
+      next_move = client.next_move("#{$1}#{$2}#{$3}#{$4}")
       if( next_move =~ /^%/)
         sendmessage = next_move
       else

@@ -72,11 +72,13 @@ while(c = sock.gets.chomp!)
   if(client.status == 'TAIKYOKU' && c =~ /^(\+|\-)(\d\d)(\d\d)(.+),(T\d+)$/)
     
     # $1-$4からURI生成し、shogi_vewer へHTTPリクエスト
-    uri = URI.parse "http://#{agent_config['viewer_server_name']}:#{agent_config['viewer_server_port']}/"
+    uri = URI.parse "http://#{agent_config['viewer_server_name']}:#{agent_config['viewer_server_port']}/data_receive/"
+    p uri
     req = Net::HTTP::Post.new uri.path
     params = {teban: $1, before: $2, after: $3, koma: $4}
     req.set_form_data(params)
-    res = Net::HTTP.start(uri.host, uri.port){|http| http.request req}
+    res = Net::HTTP.start(uri.host, uri.port) {|http| http.request req }
+    
     p res
 
     if($1 != client.game_summary['Your_Turn'])

@@ -63,27 +63,29 @@ while(c = sock.gets.chomp!)
   if(client.status == 'LOGIN' && c == 'END Game_Summary')
     sock.write("AGREE\n")
     puts 'AGREE'
+      uri = URI.parse "http://#{agent_config['viewer_server_name']}:#{agent_config['viewer_server_port']}/newgame"
+      req = Net::HTTP::Get.new uri.path
+      res = Net::HTTP.start(uri.host, uri.port) {|http| http.request req }
   end
 
   if(c == '#LOSE' || c == '#WIN')
     sock.write("LOGOUT\n")
     break
   end
-  if(client.status == 'TAIKYOKU' && c =~ /^(\+|\-)(\d\d)(\d\d)(.+),(T\d+)$/)
+  if(client.status == 'TAIKYOKU' && c =~ /^(\+|\-)(\d\d\d\d.+),(T\d+)$/)
     
-    # $1-$4からURI生成し、shogi_vewer へHTTPリクエスト
-    uri = URI.parse "http://#{agent_config['viewer_server_name']}:#{agent_config['viewer_server_port']}/data_receive/"
-    p uri
-    req = Net::HTTP::Post.new uri.path
-    params = {teban: $1, before: $2, after: $3, koma: $4}
-    req.set_form_data(params)
-    res = Net::HTTP.start(uri.host, uri.port) {|http| http.request req }
-    
-    p res
 
     if($1 != client.game_summary['Your_Turn'])
+
+      # $1-$4からURI生成し、shogi_vewer へHTTPリクエスト
+      uri = URI.parse "http://#{agent_config['viewer_server_name']}:#{agent_config['viewer_server_port']}/data_receive/"
+      req = Net::HTTP::Post.new uri.path
+      params = {sasite: c}
+      req.set_form_data(params)
+      res = Net::HTTP.start(uri.host, uri.port) {|http| http.request req }
+
       puts "[log:#{client.name}:my turn]"
-      next_move = client.next_move("#{$1}#{$2}#{$3}#{$4}")
+      next_move = client.next_move("#{$1}#{$2}")
       if( next_move =~ /^%/)
         sendmessage = next_move
       else
